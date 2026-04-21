@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CodeWnAI</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0f;--surface:#111118;--surface2:#1a1a25;--border:#2a2a3a;--accent:#7c6ff7;--accent2:#1fd1a0;--text:#e8e8f0;--muted:#6b6b80;--code-bg:#0d0d14;--danger:#f07070;--success:#1fd1a0}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+.header{padding:.85rem 1.5rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--surface);gap:12px;flex-wrap:wrap}
+.logo-row{display:flex;align-items:center;gap:10px}
+.logo-box{width:40px;height:40px;border-radius:9px;background:#0a0e1a;border:1.5px solid #1a2540;display:flex;align-items:center;justify-content:center}
+.logo-text{font-size:18px;font-weight:800;letter-spacing:-.5px}
+.logo-text span{color:var(--accent)}
+.badge{font-size:10px;font-weight:600;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:3px 10px;color:var(--accent2);letter-spacing:.5px;transition:all .3s}
+.settings-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.settings-row label{font-size:12px;color:var(--muted);white-space:nowrap}
+select#model-select{background:var(--surface2);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px;font-family:'Syne',sans-serif;font-size:12px;outline:none;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b6b80'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+select#model-select:focus{border-color:var(--accent)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all .3s}
+.dot.ok{background:var(--accent2);box-shadow:0 0 8px var(--accent2)}
+.dot.err{background:var(--danger);box-shadow:0 0 8px var(--danger)}
+.main{flex:1;display:flex;flex-direction:column;max-width:880px;width:100%;margin:0 auto;padding:1.5rem 1rem;gap:1rem}
+#messages{flex:1;display:flex;flex-direction:column;gap:16px;min-height:300px}
+.msg{display:flex;gap:10px;animation:fadeUp .25s ease}
+.msg.user{flex-direction:row-reverse}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.avatar{width:32px;height:32px;border-radius:8px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700}
+.avatar.ai{background:#0a0e1a;border:1.5px solid #1a2540}
+.avatar.user{background:var(--surface2);border:1px solid var(--border);color:var(--muted);font-size:9px}
+.bubble{max-width:88%;padding:13px 16px;border-radius:14px;font-size:14px;line-height:1.7}
+.bubble.ai{background:var(--surface);border:1px solid var(--border);border-top-left-radius:3px}
+.bubble.user{background:var(--surface2);border:1px solid var(--border);border-top-right-radius:3px}
+.ai-tag{font-size:10px;font-weight:700;color:var(--accent);letter-spacing:1px;text-transform:uppercase;margin-bottom:7px}
+.code-wrap{margin:10px 0;border-radius:10px;overflow:hidden;border:1px solid var(--border)}
+.code-header{background:var(--surface2);padding:7px 14px;display:flex;align-items:center;justify-content:space-between;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted)}
+.run-btn{background:var(--accent);color:#fff;border:none;border-radius:5px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;font-family:'Syne',sans-serif}
+.run-btn:hover{opacity:.82}
+pre{background:var(--code-bg);padding:14px 16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;overflow-x:auto;white-space:pre-wrap;word-break:break-word;color:#c5c8e8;line-height:1.6}
+.output-wrap{margin:4px 0 10px;border-radius:8px;overflow:hidden;border:1px solid var(--accent2)}
+.output-header{background:#071510;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--accent2)}
+.output-body{background:#071510;padding:10px 16px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:#a0f0d0;white-space:pre-wrap;word-break:break-word;line-height:1.6}
+.output-body.error{color:var(--danger)}
+.dots{display:inline-flex;gap:5px}
+.dots span{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:bounce 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-6px)}}
+.input-area{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:10px 14px;display:flex;gap:10px;align-items:flex-end}
+#user-input{flex:1;background:transparent;border:none;outline:none;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;resize:none;line-height:1.5;max-height:160px}
+#user-input::placeholder{color:var(--muted)}
+#send-btn{background:var(--accent);color:#fff;border:none;border-radius:9px;padding:9px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;transition:opacity .2s}
+#send-btn:disabled{opacity:.35;cursor:not-allowed}
+#send-btn:hover:not(:disabled){opacity:.85}
+.hint{font-size:11px;color:var(--muted);text-align:center}
+strong{font-weight:600;color:var(--accent2)}
+.ic{font-family:'JetBrains Mono',monospace;font-size:12px;background:var(--surface2);padding:1px 5px;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-box">
+      <svg width="24" height="24" viewBox="0 0 26 26" fill="none">
+        <path d="M13 2 L14.8 11.2 L24 13 L14.8 14.8 L13 24 L11.2 14.8 L2 13 L11.2 11.2 Z" fill="none" stroke="white" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+    <div class="logo-text">Code<span>Wn</span>AI</div>
+    <div class="badge" id="model-badge">Model yükleniyor...</div>
+  </div>
+  <div class="settings-row">
+    <label>Model:</label>
+    <select id="model-select" onchange="updateModel()" disabled>
+      <option disabled selected>Yükleniyor...</option>
+    </select>
+    <div class="dot" id="dot"></div>
+  </div>
+</div>
+
+<div class="main">
+  <div id="messages">
+    <div class="msg">
+      <div class="avatar ai">
+        <svg width="18" height="18" viewBox="0 0 26 26" fill="none">
+          <path d="M13 2 L14.8 11.2 L24 13 L14.8 14.8 L13 24 L11.2 14.8 L2 13 L11.2 11.2 Z" fill="none" stroke="white" stroke-width="1.2" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="bubble ai">
+        <div class="ai-tag">CodeWnAI</div>
+        Merhaba! Ben <strong>CodeWnAI</strong> — kod yazan, yapay zeka yaklaşımlarını karşılaştıran ve JavaScript'i <strong>tarayıcıda çalıştıran</strong> asistanım.<br><br>
+        Model listesi otomatik yükleniyor, lütfen bekle...
+      </div>
+    </div>
+  </div>
+  <div class="input-area">
+    <textarea id="user-input" rows="1" placeholder="Kod isteği yaz veya soru sor... (Enter = gönder, Shift+Enter = yeni satır)"></textarea>
+    <button id="send-btn" onclick="sendMessage()" disabled>Gönder ↗</button>
+  </div>
+  <div class="hint">JavaScript → tarayıcıda çalışır · Python → çıktı gösterilir · Karşılaştırma → en iyisi seçilir</div>
+</div>
+
+<script>
+const SYSTEM = `Sen CodeWnAI adında ileri düzey bir yapay zeka kodlama asistanısın. Adın CodeWnAI'dir.
+KURALLAR:
+1. Her zaman Türkçe konuş.
+2. Kod yazarken MUTLAKA \`\`\`dil formatını kullan.
+3. Birden fazla çözüm yolu varsa karşılaştır ve en iyisini seç:
+   **Karşılaştırma:**
+   - Yaklaşım 1: [isim] — avantaj / dezavantaj
+   - Yaklaşım 2: [isim] — avantaj / dezavantaj
+   **En iyi seçim:** [seçim ve kısa gerekçe]
+4. JavaScript kodu yazıyorsan tarayıcıda çalıştırabileceğini belirt.
+5. Python kodu yazıyorsan beklenen çıktıyı \`\`\`output bloğunda göster.
+6. Kısa ve net açıklama yap.`;
+
+let history = [];
+let currentModel = '';
+
+const STAR = `<svg width="18" height="18" viewBox="0 0 26 26" fill="none"><path d="M13 2 L14.8 11.2 L24 13 L14.8 14.8 L13 24 L11.2 14.8 L2 13 L11.2 11.2 Z" fill="none" stroke="white" stroke-width="1.2" stroke-linejoin="round"/></svg>`;
+
+async function loadModels() {
+  try {
+    const res = await fetch('/api/models');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    const sel = document.getElementById('model-select');
+    sel.innerHTML = '';
+    data.models.forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = m.id;
+      opt.textContent = m.name;
+      if (i === 0) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.disabled = false;
+    document.getElementById('dot').className = 'dot ok';
+    document.getElementById('send-btn').disabled = false;
+    updateModel();
+    appendMsg('ai', 'Hazırım! <strong>' + data.models.length + ' model</strong> yüklendi. Ne yapmamı istersin?');
+  } catch(e) {
+    document.getElementById('dot').className = 'dot err';
+    document.getElementById('model-select').innerHTML = '<option disabled selected>— Hata: ' + e.message + ' —</option>';
+    appendMsg('ai', '**Hata:** Model listesi yüklenemedi — ' + e.message + '<br>Vercel ortam değişkenini kontrol et: <span class="ic">GEMINI_API_KEY</span>');
+  }
+}
+
+function updateModel() {
+  const sel = document.getElementById('model-select');
+  currentModel = sel.value;
+  const label = sel.options[sel.selectedIndex]?.text || currentModel;
+  document.getElementById('model-badge').textContent = label;
+}
+
+async function sendMessage() {
+  const input = document.getElementById('user-input');
+  const btn = document.getElementById('send-btn');
+  const text = input.value.trim();
+  if (!text || !currentModel) return;
+  appendMsg('user', text);
+  history.push({ role: 'user', parts: [{ text }] });
+  input.value = '';
+  autoResize();
+  btn.disabled = true;
+  const loadId = appendLoading();
+  try {
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: currentModel, messages: history, system: SYSTEM })
+    });
+    const data = await res.json();
+    removeLoading(loadId);
+    if (data.error) { appendMsg('ai', '**Hata:** ' + data.error.message); btn.disabled = false; return; }
+    const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || 'Yanıt alınamadı.';
+    history.push({ role: 'model', parts: [{ text: reply }] });
+    appendMsg('ai', reply);
+  } catch (e) {
+    removeLoading(loadId);
+    appendMsg('ai', '**Hata:** ' + e.message);
+  }
+  btn.disabled = false;
+}
+
+function appendMsg(role, text) {
+  const c = document.getElementById('messages');
+  const wrap = document.createElement('div');
+  wrap.className = 'msg' + (role === 'user' ? ' user' : '');
+  const av = document.createElement('div');
+  av.className = 'avatar ' + role;
+  if (role === 'ai') av.innerHTML = STAR;
+  else av.textContent = 'Sen';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble ' + role;
+  if (role === 'ai') {
+    const tag = document.createElement('div');
+    tag.className = 'ai-tag';
+    tag.textContent = 'CodeWnAI';
+    bubble.appendChild(tag);
+    const div = document.createElement('div');
+    div.innerHTML = fmt(text);
+    bubble.appendChild(div);
+  } else {
+    bubble.textContent = text;
+  }
+  wrap.appendChild(av); wrap.appendChild(bubble);
+  c.appendChild(wrap);
+  wrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+}
+
+function fmt(raw) {
+  raw = raw.replace(/```output\n?([\s\S]*?)```/g, (_, o) =>
+    `<div class="output-wrap"><div class="output-header">▶ Beklenen Çıktı</div><div class="output-body">${esc(o.trim())}</div></div>`);
+  raw = raw.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+    const l = (lang || 'code').toLowerCase();
+    const isJS = l === 'javascript' || l === 'js';
+    const btn = isJS ? `<button class="run-btn" onclick="runJS(this)">▶ Çalıştır</button>` : '';
+    return `<div class="code-wrap"><div class="code-header"><span>${l}</span>${btn}</div><pre data-raw="${esc(code.trim())}">${esc(code.trim())}</pre></div>`;
+  });
+  raw = raw.replace(/`([^`\n]+)`/g, '<span class="ic">$1</span>');
+  raw = raw.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  raw = raw.replace(/\n/g, '<br>');
+  return raw;
+}
+
+function runJS(btn) {
+  const wrap = btn.closest('.code-wrap');
+  const pre = wrap.querySelector('pre');
+  const code = pre.dataset.raw || pre.textContent;
+  let nxt = wrap.nextElementSibling;
+  if (nxt && nxt.classList.contains('output-wrap')) nxt.remove();
+  const ow = document.createElement('div'); ow.className = 'output-wrap';
+  const oh = document.createElement('div'); oh.className = 'output-header'; oh.textContent = '▶ Çıktı (Tarayıcı)';
+  const ob = document.createElement('div'); ob.className = 'output-body';
+  ow.appendChild(oh); ow.appendChild(ob); wrap.after(ow);
+  const logs = [];
+  const orig = { log: console.log, error: console.error, warn: console.warn };
+  console.log = (...a) => logs.push(a.map(x => typeof x === 'object' ? JSON.stringify(x,null,2) : String(x)).join(' '));
+  console.error = (...a) => logs.push('[HATA] ' + a.map(String).join(' '));
+  console.warn  = (...a) => logs.push('[UYARI] ' + a.map(String).join(' '));
+  try {
+    const result = (new Function(code))();
+    Object.assign(console, orig);
+    if (logs.length) ob.textContent = logs.join('\n');
+    else if (result !== undefined) ob.textContent = typeof result === 'object' ? JSON.stringify(result,null,2) : String(result);
+    else ob.textContent = '✓ Kod çalıştı (çıktı yok)';
+  } catch(e) {
+    Object.assign(console, orig);
+    ob.className = 'output-body error';
+    ob.textContent = '✗ Hata: ' + e.message;
+  }
+}
+
+function appendLoading() {
+  const c = document.getElementById('messages');
+  const wrap = document.createElement('div'); wrap.className = 'msg';
+  const id = 'ld-' + Date.now(); wrap.id = id;
+  wrap.innerHTML = `<div class="avatar ai">${STAR}</div><div class="bubble ai"><div class="dots"><span></span><span></span><span></span></div></div>`;
+  c.appendChild(wrap); wrap.scrollIntoView({ behavior: 'smooth', block: 'end' });
+  return id;
+}
+function removeLoading(id) { const el = document.getElementById(id); if (el) el.remove(); }
+function esc(t) { return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function autoResize() { const ta = document.getElementById('user-input'); ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight,160)+'px'; }
+document.getElementById('user-input').addEventListener('input', autoResize);
+document.getElementById('user-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (!document.getElementById('send-btn').disabled) sendMessage(); }
+});
+
+loadModels();
+</script>
+</body>
+</html>
